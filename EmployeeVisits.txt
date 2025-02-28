@@ -1,0 +1,64 @@
+CREATE TABLE EmployeeVisits (
+    EMP_NAME VARCHAR(50) NOT NULL,
+    ADDRESS VARCHAR(100) NOT NULL,
+    FLOOR INT NOT NULL,
+    RESOURCES VARCHAR(50) NOT NULL
+);
+---------------------------------------------
+INSERT INTO EmployeeVisits (EMP_NAME, ADDRESS, FLOOR, RESOURCES)
+VALUES ('Ankit', 'Bangalore', 1, 'CPU');
+
+INSERT INTO EmployeeVisits (EMP_NAME, ADDRESS, FLOOR, RESOURCES)
+VALUES ('Ankit', 'Bangalore', 1, 'CPU');
+
+INSERT INTO EmployeeVisits (EMP_NAME, ADDRESS, FLOOR, RESOURCES)
+VALUES ('Ankit', 'Bangalore', 2, 'DESKTOP');
+
+INSERT INTO EmployeeVisits (EMP_NAME, ADDRESS, FLOOR, RESOURCES)
+VALUES ('Bikaas', 'Bangalore', 2, 'DESKTOP');
+
+INSERT INTO EmployeeVisits (EMP_NAME, ADDRESS, FLOOR, RESOURCES)
+VALUES ('Bikaas', 'Bangalore', 2, 'DESKTOP');
+
+INSERT INTO EmployeeVisits (EMP_NAME, ADDRESS, FLOOR, RESOURCES)
+VALUES ('Bikaas', 'Bangalore', 1, 'MONITOR');
+----------------------------------------------------------
+Query:
+-----------------
+
+WITH Visits AS (
+    SELECT EMP_NAME, COUNT(EMP_NAME) AS total_visits
+    FROM EmployeeVisits
+    GROUP BY EMP_NAME
+),
+
+VisitedFloors AS (
+    SELECT EMP_NAME, FLOOR, COUNT(FLOOR) AS floorcount
+    FROM EmployeeVisits
+    GROUP BY EMP_NAME, FLOOR
+    ORDER BY floorcount DESC
+),
+
+floorrank AS (
+    SELECT EMP_NAME, FLOOR,
+           RANK() OVER (PARTITION BY EMP_NAME ORDER BY floorcount DESC) AS mostvisitfloor
+    FROM VisitedFloors
+),
+
+resources AS (
+    SELECT EMP_NAME, GROUP_CONCAT(DISTINCT RESOURCES SEPARATOR ',') AS resources_used
+    FROM EmployeeVisits
+    GROUP BY EMP_NAME
+)
+
+SELECT DISTINCT v.EMP_NAME, v.total_visits, f.FLOOR AS most_visited_floor, r.resources_used
+FROM Visits v 
+INNER JOIN VisitedFloors vf ON v.EMP_NAME = vf.EMP_NAME
+INNER JOIN floorrank f ON vf.EMP_NAME = f.EMP_NAME
+INNER JOIN resources r ON f.EMP_NAME = r.EMP_NAME
+WHERE f.mostvisitfloor = 1;
+
+
+
+
+
